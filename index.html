@@ -1,1 +1,576 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="font-family:system-ui;padding:20px"><h1>Test</h1><button style="padding:20px;font-size:20px" onclick="alert('JS works')">Tap me</button><p id="out"></p><script>document.getElementById('out').textContent='Loaded '+new Date().toLocaleTimeString();</script></body></html>
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stockroom</title>
+<style>
+:root{--bg:#f1f4f3;--sf:#fff;--ink:#13211d;--mu:#566762;--ln:#d9e1de;--ac:#0e6b5b;--ac2:#d9efe9;--good:#17703f;--gd:#daf0e2;--warn:#8f5a00;--wn:#faebc9;--bad:#b0261d;--bd:#fadfdb}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+.app{display:grid;grid-template-columns:200px 1fr;min-height:100vh}
+.rail{background:var(--sf);border-right:1px solid var(--ln);padding:12px 8px;display:flex;flex-direction:column;gap:8px}
+.brand{font-weight:700;font-size:18px;padding:0 8px;color:var(--ac)}
+.rail button{text-align:left;background:none;border:0;padding:8px;border-radius:6px;cursor:pointer;color:var(--mu);font:inherit;font-weight:500}
+.rail button:hover{background:#f0f6f4;color:var(--ink)}
+.rail button.on{background:var(--ac2);color:var(--ac);font-weight:600}
+main{padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+h1{font-size:22px;margin:0}
+h3{font-size:14px;margin:0 0 8px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+button.btn{background:var(--sf);border:1px solid var(--ln);border-radius:6px;padding:7px 12px;cursor:pointer;font:inherit}
+button.btn:hover{border-color:var(--mu)}
+button.btn.p{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600}
+button.btn.s{padding:3px 8px;font-size:12px}
+input,select{background:var(--sf);border:1px solid var(--ln);border-radius:6px;padding:7px 9px;font:inherit;width:100%}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.kpi{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:10px 12px}
+.kpi .l{font-size:11px;text-transform:uppercase;color:var(--mu);font-weight:600}
+.kpi .v{font-size:20px;font-weight:700;margin-top:2px}
+.kpi .s{font-size:11px;color:var(--mu)}
+table{width:100%;border-collapse:collapse;background:var(--sf);border-radius:8px;overflow:hidden;border:1px solid var(--ln)}
+th{font-size:11px;text-transform:uppercase;color:var(--mu);text-align:left;padding:8px 10px;border-bottom:1px solid var(--ln);background:var(--sf)}
+td{padding:7px 10px;border-bottom:1px solid var(--ln)}
+tr:last-child td{border-bottom:0}
+tr[data-id]{cursor:pointer}
+tr[data-id]:hover td{background:#f0f6f4}
+.num{text-align:right}
+.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+.pill.g{background:var(--gd);color:var(--good)}
+.pill.w{background:var(--wn);color:var(--warn)}
+.pill.b{background:var(--bd);color:var(--bad)}
+.pill.i{background:var(--ac2);color:var(--ac)}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.sub{color:var(--mu);font-size:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:150px}
+.frm{position:fixed;inset:0;background:rgba(8,16,13,.55);display:flex;align-items:flex-end;justify-content:center;z-index:10;padding:0}
+.frm.hide{display:none}
+.sh{background:var(--sf);border-radius:12px 12px 0 0;width:100%;max-width:620px;max-height:94vh;display:flex;flex-direction:column}
+.shh{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--ln)}
+.shb{padding:12px 16px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.shf{padding:10px 16px;border-top:1px solid var(--ln);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.x{background:none;border:0;font-size:22px;cursor:pointer;color:var(--mu)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase}
+label.f input,label.f select{font-weight:400;text-transform:none;color:var(--ink);font-size:14px}
+.bill{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.bill div{display:flex;justify-content:space-between}
+.bill .tot{border-top:1px solid var(--ln);padding-top:4px;font-weight:700;font-size:15px}
+.sugg{position:absolute;left:0;right:0;top:100%;background:var(--sf);border:1px solid var(--ln);border-radius:6px;max-height:200px;overflow:auto;z-index:5;margin-top:4px}
+.sugg button{display:block;width:100%;text-align:left;background:none;border:0;padding:8px 10px;cursor:pointer;font:inherit;border-bottom:1px solid var(--ln)}
+.sugg button:hover{background:#f0f6f4}
+.rel{position:relative}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 14px;border-radius:6px;font-size:13px;opacity:0;transition:opacity .2s;z-index:20;max-width:90%}
+#toast.on{opacity:1}
+@media(max-width:700px){.app{grid-template-columns:1fr}.rail{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--ln);padding:8px}.rail .brand{display:none}.rail button{white-space:nowrap}}
+</style>
+</head><body>
+<div class="app">
+<aside class="rail">
+<div class="brand">Stockroom</div>
+<nav id="nav"></nav>
+</aside>
+<main>
+<div class="top"><h1 id="title">Dashboard</h1><div class="row"><select id="branch" style="width:auto"></select></div></div>
+<div id="view"></div>
+</main>
+</div>
+<div id="frm" class="frm hide"><div class="sh" id="sh"></div></div>
+<div id="toast"></div>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const uid=()=>Math.random().toString(36).slice(2,10);
+const todayISO=()=>new Date().toISOString().slice(0,10);
+const dshort=s=>{const p=s.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]).toLocaleDateString('en-GB',{day:'numeric',month:'short'})};
+const money=n=>'৳'+(Math.round(n*100)/100).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const money0=n=>'৳'+Math.round(n).toLocaleString('en-IN');
+const num=n=>Math.round(n).toLocaleString('en-IN');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY='stockroom.v2';
+let DB=null,toastT=null;
+
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2500)}
+function save(){localStorage.setItem(KEY,JSON.stringify(DB))}
+function load(){try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
+
+function seed(){
+const b=[{id:'DHK',name:'Dhaka'},{id:'CTG',name:'Chattogram'}];
+const cats=['DEV','OIL','PRT','DAI','BEV','GRO','HHD','PCR'];
+const names={
+DEV:['Nebula Mini Diffuser','Nebula Pro Diffuser','Mistral Wall 500'],
+OIL:['Oud Royale 100ml','White Musk 100ml','Amber Wood 500ml'],
+PRT:['Nebulizer Glass Set','Air Pump Module','Power Adapter 12V'],
+DAI:['Fresh Milk 1L','Set Yogurt 500g','Butter 200g'],
+BEV:['Drinking Water 1L','Mango Juice 1L','Cola 600ml'],
+GRO:['Miniket Rice 5kg','Soybean Oil 1L','Sugar 1kg'],
+HHD:['Dishwash Liquid 750ml','Laundry Powder 1kg','Floor Cleaner 1L'],
+PCR:['Bath Soap 100g','Shampoo 340ml','Toothpaste 200g']};
+const price={DEV:15000,OIL:1500,PRT:800,DAI:92,BEV:120,GRO:420,HHD:190,PCR:175};
+const products=[];let n=0;
+cats.forEach(c=>names[c].forEach(nm=>{
+  const p={id:uid(),sku:c+'-'+String(++n).padStart(4,'0'),name:nm,category:c,unit:'pcs',
+    cost:Math.round(price[c]*0.68),price:price[c],reorderLevel:6,stock:{}};
+  b.forEach(br=>p.stock[br.id]={physical:Math.floor(Math.random()*40)+5,reserved:0});
+  products.push(p);
+}));
+const customers=[
+  {id:uid(),code:'C1001',name:'Lakeview Hotel',type:'Hotel',branch:'DHK',limit:200000,phone:'01700-000111'},
+  {id:uid(),code:'C1002',name:'Blue Orchid Spa',type:'Spa',branch:'DHK',limit:60000,phone:'01700-000222'},
+  {id:uid(),code:'C2001',name:'Port City Hotel',type:'Hotel',branch:'CTG',limit:200000,phone:'01700-000333'}];
+return{
+  org:{name:'My Company'},
+  branches:b,products,customers,
+  orders:[],invoices:[],payments:[],
+  counters:{so:1000,inv:1000,dn:1000,rc:1000},
+  currentUser:'Owner'
+};
+}
+
+function nextNo(k,pre){DB.counters[k]=(DB.counters[k]||0)+1;return pre+String(DB.counters[k]).padStart(4,'0')}
+
+function stockAt(p,b){return p.stock[b]||(p.stock[b]={physical:0,reserved:0})}
+function availAt(p,b){const s=stockAt(p,b);return s.physical-s.reserved}
+function pfind(id){return DB.products.find(x=>x.id===id)}
+function cfind(id){return DB.customers.find(x=>x.id===id)}
+function bname(id){const b=DB.branches.find(x=>x.id===id);return b?b.name:id}
+function exposure(cid){return DB.invoices.filter(i=>i.customerId===cid&&i.status!=='paid'&&i.status!=='void').reduce((s,i)=>s+(i.total-i.paid),0)}
+
+function createOrder(branchId,customerId,lines,discount){
+  const o={id:uid(),orderNo:nextNo('so','SO-'),branchId,customerId,
+    date:todayISO(),status:'draft',
+    lines:lines.map((l,i)=>({id:uid(),lineNo:i+1,productId:l.productId,qty:l.qty,qtyReserved:0,qtyDelivered:0,qtyInvoiced:0,price:l.price,discount:0})),
+    discount:discount||0,subtotal:0,total:0,amountPaid:0};
+  const sub=o.lines.reduce((s,l)=>s+l.qty*l.price,0);
+  o.subtotal=sub;o.total=Math.max(0,sub-o.discount);
+  DB.orders.push(o);save();return o;
+}
+
+function confirmOrder(id){
+  const o=DB.orders.find(x=>x.id===id);if(!o||o.status!=='draft')return{err:'Not a draft'};
+  const c=cfind(o.customerId);
+  if(c.limit>0 && exposure(c.id)+o.total>c.limit) return{err:'Over credit limit'};
+  o.lines.forEach(l=>{
+    const p=pfind(l.productId);
+    stockAt(p,o.branchId).reserved+=l.qty;
+    l.qtyReserved=l.qty;
+  });
+  o.status='confirmed';save();return{ok:1};
+}
+
+function dispatchOrder(id){
+  const o=DB.orders.find(x=>x.id===id);if(!o||o.status!=='confirmed')return{err:'Not confirmed'};
+  const dn={id:uid(),dnNo:nextNo('dn','DN-'),orderId:o.id,orderNo:o.orderNo,branchId:o.branchId,date:todayISO(),lines:[]};
+  o.lines.forEach(l=>{
+    const qty=l.qty-l.qtyDelivered;if(qty<=0)return;
+    const p=pfind(l.productId);const s=stockAt(p,o.branchId);
+    s.physical=Math.max(0,s.physical-qty);s.reserved=Math.max(0,s.reserved-qty);
+    l.qtyDelivered+=qty;l.qtyReserved=Math.max(0,l.qtyReserved-qty);
+    dn.lines.push({productId:l.productId,qty});
+  });
+  DB.deliveries=DB.deliveries||[];DB.deliveries.push(dn);
+  o.status=o.lines.every(l=>l.qtyDelivered>=l.qty)?'delivered':'partially_delivered';
+  save();return{ok:1,dn};
+}
+
+function invoiceOrder(id){
+  const o=DB.orders.find(x=>x.id===id);
+  if(!o||!['delivered','partially_delivered'].includes(o.status))return{err:'Not delivered'};
+  const lines=o.lines.filter(l=>l.qtyDelivered>l.qtyInvoiced).map(l=>{
+    const p=pfind(l.productId);
+    return{id:uid(),orderLineId:l.id,productId:l.productId,qty:l.qtyDelivered-l.qtyInvoiced,price:l.price,cost:p.cost};
+  });
+  if(!lines.length)return{err:'Nothing to invoice'};
+  const subtotal=lines.reduce((s,l)=>s+l.qty*l.price,0);
+  const inv={id:uid(),invoiceNo:nextNo('inv','INV-'),orderId:o.id,orderNo:o.orderNo,customerId:o.customerId,branchId:o.branchId,
+    date:todayISO(),due:new Date(Date.now()+14*86400000).toISOString().slice(0,10),
+    subtotal,total:subtotal,paid:0,balance:subtotal,status:'open',lines};
+  DB.invoices.push(inv);
+  lines.forEach(l=>{o.lines.find(x=>x.id===l.orderLineId).qtyInvoiced+=l.qty});
+  if(o.lines.every(l=>l.qtyInvoiced>=l.qtyDelivered))o.status='invoiced';
+  save();return{ok:1,inv};
+}
+
+function recordPayment(invoiceId,amount,method,ref){
+  const inv=DB.invoices.find(x=>x.id===invoiceId);if(!inv)return{err:'No invoice'};
+  amount=Math.min(amount,inv.balance);
+  if(amount<=0)return{err:'Amount must be > 0'};
+  inv.paid+=amount;inv.balance=inv.total-inv.paid;
+  inv.status=inv.balance<=0.01?'paid':'partially_paid';
+  const p={id:uid(),paymentNo:nextNo('rc','RCP-'),invoiceId,invoiceNo:inv.invoiceNo,customerId:inv.customerId,
+    date:todayISO(),amount,method:method||'cash',reference:ref||''};
+  DB.payments.push(p);
+  const o=DB.orders.find(x=>x.id===inv.orderId);
+  if(o){o.amountPaid=(o.amountPaid||0)+amount;if(o.amountPaid>=o.total)o.status='paid'}
+  save();return{ok:1,payment:p};
+}
+
+function adjustStock(pid,branchId,delta,reason){
+  const p=pfind(pid);const s=stockAt(p,branchId);
+  if(s.physical+delta<0)return{err:'Would go negative'};
+  s.physical=+(s.physical+delta).toFixed(3);
+  DB.adjustments=DB.adjustments||[];
+  DB.adjustments.push({id:uid(),date:todayISO(),productId:pid,branchId,delta,reason});
+  save();return{ok:1};
+}
+
+const TITLES={dashboard:'Dashboard',products:'Products',orders:'Sales orders',invoices:'Invoices',payments:'Payments',customers:'Customers',deliveries:'Deliveries'};
+const NAV=[['dashboard','Dashboard'],['products','Products'],['orders','Orders'],['deliveries','Deliveries'],['invoices','Invoices'],['payments','Payments'],['customers','Customers']];
+let state={view:'dashboard',branch:'all',q:{}};
+
+function renderNav(){
+  $('#nav').innerHTML=NAV.map(([k,l])=>`<button data-view="${k}" class="${state.view===k?'on':''}">${l}</button>`).join('');
+  $$('#nav button').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;render()});
+}
+function renderBranch(){
+  $('#branch').innerHTML='<option value="all">All branches</option>'+DB.branches.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('');
+  $('#branch').value=state.branch;
+  $('#branch').onchange=()=>{state.branch=$('#branch').value;render()};
+}
+function scope(){return state.branch==='all'?DB.branches:DB.branches.filter(b=>b.id===state.branch)}
+function inScope(o){return state.branch==='all'||o.branchId===state.branch}
+function inScope2(p){return state.branch==='all'||(DB.invoices.find(i=>i.id===p.invoiceId)?.branchId===state.branch)}
+
+function statusPill(s){
+  const m={draft:'i',confirmed:'w',partially_delivered:'w',delivered:'g',invoiced:'i',partially_paid:'w',paid:'g',cancelled:'b',open:'w',overdue:'b'};
+  const l={draft:'Draft',confirmed:'Confirmed',partially_delivered:'Partial',delivered:'Delivered',invoiced:'Invoiced',partially_paid:'Part paid',paid:'Paid',cancelled:'Cancelled',open:'Open',overdue:'Overdue'};
+  return `<span class="pill ${m[s]||'i'}">${l[s]||s}</span>`;
+}
+
+const views={};
+
+views.dashboard=()=>{
+  const brs=scope();
+  let stockVal=0;DB.products.forEach(p=>brs.forEach(b=>{stockVal+=stockAt(p,b.id).physical*p.cost}));
+  const today=DB.orders.filter(inScope);
+  const todayVal=today.reduce((s,o)=>s+o.total,0);
+  const low=DB.products.filter(p=>brs.some(b=>availAt(p,b.id)<=p.reorderLevel));
+  const ar=DB.invoices.filter(i=>inScope(i)&&i.status!=='paid').reduce((s,i)=>s+i.balance,0);
+  const recent=DB.orders.filter(inScope).slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  $('#view').innerHTML=`
+  <div style="display:flex;flex-direction:column;gap:12px">
+  <div class="row">
+    <button class="btn p" id="btn-new-order">New sale</button>
+    <button class="btn" id="btn-adjust">Adjust stock</button>
+    <button class="btn" id="btn-new-cust">New customer</button>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Stock value</div><div class="v">${money0(stockVal)}</div><div class="s">${DB.products.length} SKUs</div></div>
+    <div class="kpi"><div class="l">Sales today</div><div class="v">${money0(todayVal)}</div><div class="s">${today.length} orders</div></div>
+    <div class="kpi"><div class="l">Low stock</div><div class="v">${low.length}</div><div class="s">need restocking</div></div>
+    <div class="kpi"><div class="l">Receivable</div><div class="v">${money0(ar)}</div><div class="s">open invoices</div></div>
+  </div>
+  <div class="card"><h3>Recent orders</h3>
+  ${recent.length?`<table><thead><tr><th>Order</th><th>Customer</th><th class="num">Total</th><th>Status</th></tr></thead><tbody>${recent.map(o=>`<tr data-id="${o.id}" data-ord="${o.id}"><td class="mono">${o.orderNo}</td><td>${esc(cfind(o.customerId)?.name||'')}</td><td class="num">${money0(o.total)}</td><td>${statusPill(o.status)}</td></tr>`).join('')}</tbody></table>`:'<p class="sub">No orders yet.</p>'}
+  </div>
+  <div class="card"><h3>Low stock</h3>
+  ${low.length?`<table><thead><tr><th>Product</th><th class="num">Available</th><th class="num">Min</th></tr></thead><tbody>${low.slice(0,8).map(p=>`<tr><td>${esc(p.name)}</td><td class="num">${scope().reduce((s,b)=>s+availAt(p,b.id),0)}</td><td class="num">${p.reorderLevel}</td></tr>`).join('')}</tbody></table>`:'<p class="sub">All good.</p>'}
+  </div></div>`;
+  document.getElementById('btn-new-order').onclick=openNewOrder;
+  document.getElementById('btn-adjust').onclick=()=>openAdjust();
+  document.getElementById('btn-new-cust').onclick=openNewCustomer;
+  document.querySelectorAll('[data-ord]').forEach(tr=>tr.onclick=()=>openOrder(tr.dataset.ord));
+};
+
+views.products=()=>{
+  const q=(state.q.products||'').toLowerCase();
+  const rows=DB.products.filter(p=>!q||p.name.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q));
+  const brs=scope();
+  $('#view').innerHTML=`
+  <div style="display:flex;flex-direction:column;gap:10px">
+  <input id="prod-search" placeholder="Search products…" value="${esc(state.q.products||'')}">
+  <table><thead><tr><th>SKU</th><th>Name</th><th>Category</th>${brs.map(b=>`<th class="num">${b.id}</th>`).join('')}<th class="num">Value</th></tr></thead>
+  <tbody>${rows.slice(0,100).map(p=>`<tr data-id="${p.id}" data-prod="${p.id}">
+  <td class="mono">${p.sku}</td><td>${esc(p.name)}</td><td>${p.category}</td>
+  ${brs.map(b=>{const a=availAt(p,b.id);const cls=a<=0?'color:var(--bad)':a<=p.reorderLevel?'color:var(--warn)':'';return `<td class="num" style="${cls}">${num(a)}</td>`}).join('')}
+  <td class="num">${money0(brs.reduce((s,b)=>s+stockAt(p,b.id).physical*p.cost,0))}</td></tr>`).join('')}</tbody></table>
+  </div>`;
+  document.getElementById('prod-search').oninput=function(){state.q.products=this.value;views.products()};
+  document.querySelectorAll('[data-prod]').forEach(tr=>tr.onclick=()=>openProduct(tr.dataset.prod));
+};
+
+views.orders=()=>{
+  const rows=DB.orders.filter(inScope).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  $('#view').innerHTML=`
+  <div class="row" style="margin-bottom:10px"><button class="btn p" id="btn-new-order2">New sale</button></div>
+  <table><thead><tr><th>Order</th><th>Date</th><th>Customer</th><th class="num">Total</th><th>Status</th></tr></thead>
+  <tbody>${rows.map(o=>`<tr data-id="${o.id}" data-ord="${o.id}">
+  <td class="mono">${o.orderNo}</td><td>${dshort(o.date)}</td><td>${esc(cfind(o.customerId)?.name||'')}</td>
+  <td class="num">${money0(o.total)}</td><td>${statusPill(o.status)}</td></tr>`).join('')}</tbody></table>`;
+  document.getElementById('btn-new-order2').onclick=openNewOrder;
+  document.querySelectorAll('[data-ord]').forEach(tr=>tr.onclick=()=>openOrder(tr.dataset.ord));
+};
+
+views.deliveries=()=>{
+  const rows=(DB.deliveries||[]).filter(inScope);
+  $('#view').innerHTML=rows.length?`<table><thead><tr><th>DN</th><th>Date</th><th>Order</th><th class="num">Lines</th></tr></thead>
+  <tbody>${rows.map(d=>`<tr><td class="mono">${d.dnNo}</td><td>${dshort(d.date)}</td><td class="mono">${d.orderNo}</td><td class="num">${d.lines.length}</td></tr>`).join('')}</tbody></table>`:'<p class="sub">No deliveries yet.</p>';
+};
+
+views.invoices=()=>{
+  const rows=DB.invoices.filter(inScope);
+  const ar=rows.filter(i=>i.status!=='paid').reduce((s,i)=>s+i.balance,0);
+  $('#view').innerHTML=`
+  <div class="kpis" style="margin-bottom:10px">
+  <div class="kpi"><div class="l">Outstanding</div><div class="v">${money0(ar)}</div></div>
+  <div class="kpi"><div class="l">Open invoices</div><div class="v">${rows.filter(i=>i.status!=='paid').length}</div></div>
+  </div>
+  <table><thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th class="num">Total</th><th class="num">Paid</th><th class="num">Balance</th><th>Status</th></tr></thead>
+  <tbody>${rows.map(i=>`<tr data-id="${i.id}" data-inv="${i.id}">
+  <td class="mono">${i.invoiceNo}</td><td>${dshort(i.date)}</td><td>${esc(cfind(i.customerId)?.name||'')}</td>
+  <td class="num">${money0(i.total)}</td><td class="num">${money0(i.paid)}</td>
+  <td class="num" style="${i.balance?'color:var(--warn);font-weight:600':''}">${money0(i.balance)}</td>
+  <td>${statusPill(i.status)}</td></tr>`).join('')}</tbody></table>`;
+  document.querySelectorAll('[data-inv]').forEach(tr=>tr.onclick=()=>openInvoice(tr.dataset.inv));
+};
+
+views.payments=()=>{
+  const rows=DB.payments.filter(inScope2);
+  const cin=rows.reduce((s,p)=>s+p.amount,0);
+  $('#view').innerHTML=`
+  <div class="kpis" style="margin-bottom:10px"><div class="kpi"><div class="l">Total received</div><div class="v">${money0(cin)}</div></div></div>
+  <table><thead><tr><th>Receipt</th><th>Date</th><th>Customer</th><th>Method</th><th class="num">Amount</th></tr></thead>
+  <tbody>${rows.map(p=>`<tr><td class="mono">${p.paymentNo}</td><td>${dshort(p.date)}</td><td>${esc(cfind(p.customerId)?.name||'')}</td><td>${esc(p.method)}</td><td class="num">${money0(p.amount)}</td></tr>`).join('')}</tbody></table>`;
+};
+
+views.customers=()=>{
+  const rows=DB.customers.filter(c=>state.branch==='all'||c.branch===state.branch);
+  $('#view').innerHTML=`
+  <div class="row" style="margin-bottom:10px"><button class="btn p" id="btn-new-cust2">New customer</button></div>
+  <table><thead><tr><th>Code</th><th>Name</th><th>Type</th><th>Branch</th><th class="num">Exposure</th><th class="num">Limit</th></tr></thead>
+  <tbody>${rows.map(c=>{const e=exposure(c.id);const over=c.limit>0&&e>c.limit;return `<tr data-id="${c.id}" data-cust="${c.id}">
+  <td class="mono">${c.code}</td><td>${esc(c.name)}</td><td>${esc(c.type)}</td><td>${bname(c.branch)}</td>
+  <td class="num" style="${over?'color:var(--bad);font-weight:600':''}">${money0(e)}</td>
+  <td class="num">${c.limit>0?money0(c.limit):'—'}</td></tr>`}).join('')}</tbody></table>`;
+  document.getElementById('btn-new-cust2').onclick=openNewCustomer;
+  document.querySelectorAll('[data-cust]').forEach(tr=>tr.onclick=()=>openCustomer(tr.dataset.cust));
+};
+
+function openFrm(html){$('#sh').innerHTML=html;$('#frm').classList.remove('hide')}
+function closeFrm(){$('#frm').classList.add('hide');$('#sh').innerHTML=''}
+window.closeFrm=closeFrm;
+
+function openProduct(id){
+  const p=pfind(id);if(!p)return;
+  const rows=DB.branches.map(b=>{const s=stockAt(p,b.id);const a=s.physical-s.reserved;
+    return `<tr><td>${esc(b.name)}</td><td class="num">${num(s.physical)}</td><td class="num">${num(s.reserved)}</td><td class="num">${num(a)}</td></tr>`}).join('');
+  openFrm(`<div class="shh"><h2 style="font-size:16px;margin:0">${esc(p.name)}</h2><button class="x" onclick="closeFrm()">×</button></div>
+  <div class="shb">
+  <div class="grid"><div><div class="sub">SKU</div><b class="mono">${p.sku}</b></div><div><div class="sub">Category</div>${p.category}</div>
+  <div><div class="sub">Cost</div>${money(p.cost)}</div><div><div class="sub">Price</div>${money(p.price)}</div></div>
+  <table><thead><tr><th>Branch</th><th class="num">Physical</th><th class="num">Reserved</th><th class="num">Available</th></tr></thead><tbody>${rows}</tbody></table>
+  </div>
+  <div class="shf"><button class="btn" onclick="closeFrm()">Close</button><button class="btn p" id="btn-adj-from-prod">Adjust stock</button></div>`);
+  document.getElementById('btn-adj-from-prod').onclick=()=>{closeFrm();openAdjust(p.id)};
+}
+window.openProduct=openProduct;
+
+function openAdjust(pid){
+  const p=pid?pfind(pid):DB.products[0];
+  openFrm(`<div class="shh"><h2 style="font-size:16px;margin:0">Adjust stock</h2><button class="x" onclick="closeFrm()">×</button></div>
+  <div class="shb">
+  <label class="f">Product<select id="adj_p">${DB.products.map(x=>`<option value="${x.id}"${x.id===p.id?' selected':''}>${esc(x.name)}</option>`).join('')}</select></label>
+  <label class="f">Branch<select id="adj_b">${DB.branches.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select></label>
+  <label class="f">Change (+ or −)<input id="adj_q" type="number" value="-1"></label>
+  <label class="f">Reason<select id="adj_r"><option>Count correction</option><option>Damaged</option><option>Expired</option><option>Returned</option></select></label>
+  <div id="adj_e" style="color:var(--bad);font-size:13px"></div>
+  </div>
+  <div class="shf"><button class="btn" onclick="closeFrm()">Cancel</button><button class="btn p" id="adj-save">Apply</button></div>`);
+  document.getElementById('adj-save').onclick=()=>{
+    const pid=$('#adj_p').value,b=$('#adj_b').value,q=parseFloat($('#adj_q').value),r=$('#adj_r').value;
+    if(!q){$('#adj_e').textContent='Enter a non-zero change';return}
+    const res=adjustStock(pid,b,q,r);
+    if(res.err){$('#adj_e').textContent=res.err;return}
+    closeFrm();render();toast('Stock adjusted');
+  };
+}
+window.openAdjust=openAdjust;
+
+function openNewCustomer(){
+  openFrm(`<div class="shh"><h2 style="font-size:16px;margin:0">New customer</h2><button class="x" onclick="closeFrm()">×</button></div>
+  <div class="shb">
+  <label class="f">Name<input id="nc_n"></label>
+  <label class="f">Type<select id="nc_t"><option>Hotel</option><option>Spa</option><option>Office</option><option>Retail</option><option>Restaurant</option></select></label>
+  <label class="f">Branch<select id="nc_b">${DB.branches.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select></label>
+  <label class="f">Phone<input id="nc_p"></label>
+  <label class="f">Credit limit<input id="nc_l" type="number" value="50000"></label>
+  <div id="nc_e" style="color:var(--bad);font-size:13px"></div>
+  </div>
+  <div class="shf"><button class="btn" onclick="closeFrm()">Cancel</button><button class="btn p" id="nc-save">Save</button></div>`);
+  document.getElementById('nc-save').onclick=()=>{
+    const n=$('#nc_n').value.trim();if(!n){$('#nc_e').textContent='Name required';return}
+    const code='C'+String(1000+DB.customers.length+1).padStart(4,'0');
+    DB.customers.push({id:uid(),code,name:n,type:$('#nc_t').value,branch:$('#nc_b').value,phone:$('#nc_p').value,limit:parseFloat($('#nc_l').value)||0});
+    save();closeFrm();render();toast('Customer added');
+  };
+}
+window.openNewCustomer=openNewCustomer;
+
+function openCustomer(id){
+  const c=cfind(id);if(!c)return;
+  const orders=DB.orders.filter(o=>o.customerId===c.id);
+  const e=exposure(c.id);const over=c.limit>0&&e>c.limit;
+  openFrm(`<div class="shh"><h2 style="font-size:16px;margin:0">${esc(c.name)}</h2><button class="x" onclick="closeFrm()">×</button></div>
+  <div class="shb">
+  <div class="grid"><div><div class="sub">Code</div><b class="mono">${c.code}</b></div><div><div class="sub">Type</div>${esc(c.type)}</div>
+  <div><div class="sub">Phone</div>${esc(c.phone||'—')}</div><div><div class="sub">Branch</div>${bname(c.branch)}</div>
+  <div><div class="sub">Exposure</div><b style="${over?'color:var(--bad)':''}">${money0(e)}</b></div>
+  <div><div class="sub">Limit</div>${c.limit>0?money0(c.limit):'—'}</div></div>
+  <h3 style="margin-top:8px">Orders (${orders.length})</h3>
+  ${orders.length?`<table><thead><tr><th>Order</th><th class="num">Total</th><th>Status</th></tr></thead><tbody>${orders.slice(-5).map(o=>`<tr data-ord2="${o.id}"><td class="mono">${o.orderNo}</td><td class="num">${money0(o.total)}</td><td>${statusPill(o.status)}</td></tr>`).join('')}</tbody></table>`:'<p class="sub">No orders yet.</p>'}
+  </div>
+  <div class="shf"><button class="btn" onclick="closeFrm()">Close</button><button class="btn p" id="cust-new-order">New sale</button></div>`);
+  document.getElementById('cust-new-order').onclick=()=>{closeFrm();openNewOrderFor(c.id)};
+  document.querySelectorAll('[data-ord2]').forEach(tr=>tr.onclick=()=>{closeFrm();openOrder(tr.dataset.ord2)});
+}
+window.openCustomer=openCustomer;
+
+let draft={branch:'DHK',customer:null,lines:[],discount:0};
+function openNewOrder(){
+  const firstCustomer=DB.customers.find(c=>c.branch===(state.branch==='all'?'DHK':state.branch))||DB.customers[0];
+  draft={branch:state.branch==='all'?'DHK':state.branch,customer:firstCustomer?.id,lines:[],discount:0};
+  renderOrderForm();
+}
+function openNewOrderFor(cid){
+  const c=cfind(cid);
+  draft={branch:c.branch,customer:cid,lines:[],discount:0};
+  renderOrderForm();
+}
+window.openNewOrder=openNewOrder;
+window.openNewOrderFor=openNewOrderFor;
+
+function renderOrderForm(){
+  const customersHere=DB.customers.filter(c=>c.branch===draft.branch);
+  if(!customersHere.find(c=>c.id===draft.customer)) draft.customer=customersHere[0]?.id;
+  openFrm(`<div class="shh"><h2 style="font-size:16px;margin:0">New sale</h2><button class="x" onclick="closeFrm()">×</button></div>
+  <div class="shb">
+  <div class="grid">
+  <label class="f">Branch<select id="or_b">${DB.branches.map(b=>`<option value="${b.id}"${b.id===draft.branch?' selected':''}>${esc(b.name)}</option>`).join('')}</select></label>
+  <label class="f">Customer<select id="or_c">${customersHere.map(c=>`<option value="${c.id}"${c.id===draft.customer?' selected':''}>${esc(c.name)}</option>`).join('')}</select></label>
+  </div>
+  <div class="rel"><input id="or_s" placeholder="Add product: type name or SKU" autocomplete="off"><div id="or_sg" class="sugg" style="display:none"></div></div>
+  <div id="or_lines"></div>
+  <label class="f">Discount<input id="or_d" type="number" min="0" step="1" value="${draft.discount}"></label>
+  <div id="or_tot"></div>
+  <div id="or_e" style="color:var(--bad);font-size:13px"></div>
+  </div>
+  <div class="shf"><button class="btn" onclick="closeFrm()">Cancel</button><button class="btn p" id="or_save">Create</button></div>`);
+  $('#or_b').onchange=function(){draft.branch=this.value;renderOrderForm()};
+  $('#or_c').onchange=function(){draft.customer=this.value};
+  $('#or_s').oninput=function(){suggestProducts(this.value)};
+  $('#or_d').oninput=function(){draft.discount=parseFloat(this.value)||0;renderOrderLines()};
+  document.getElementById('or_save').onclick=saveOrder;
+  renderOrderLines();
+}
+function suggestProducts(q){
+  const box=$('#or_sg');const t=q.trim().toLowerCase();
+  if(!t){box.style.display='none';return}
+  const res=DB.products.filter(p=>(p.name+' '+p.sku).toLowerCase().includes(t)).slice(0,6);
+  box.innerHTML=res.length?res.map(p=>`<button type="button" data-add="${p.id}"><b>${esc(p.name)}</b> <span class="sub mono">${p.sku}</span></button>`).join(''):'<div style="padding:8px 10px;color:var(--mu)">No match</div>';
+  box.style.display='block';
+  box.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addOrderLine(b.dataset.add));
+}
+function addOrderLine(pid){
+  const ex=draft.lines.find(l=>l.productId===pid);
+  if(ex)ex.qty+=1;else draft.lines.push({productId:pid,qty:1,price:pfind(pid).price});
+  $('#or_s').value='';$('#or_sg').style.display='none';
+  renderOrderLines();
+}
+function renderOrderLines(){
+  const host=$('#or_lines');
+  if(!draft.lines.length){host.innerHTML='<p class="sub" style="padding:8px 0">No products yet.</p>';$('#or_tot').innerHTML='';return}
+  host.innerHTML='<table><thead><tr><th>Product</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Total</th><th></th></tr></thead><tbody>'+draft.lines.map((l,i)=>{
+    const p=pfind(l.productId);const avail=availAt(p,draft.branch);
+    return `<tr><td>${esc(p.name)}<div class="sub">${num(avail)} available</div></td>
+    <td class="num"><input type="number" min="1" value="${l.qty}" style="width:60px" data-q="${i}"></td>
+    <td class="num"><input type="number" min="0" value="${l.price}" style="width:90px" data-pr="${i}"></td>
+    <td class="num">${money0(l.qty*l.price)}</td>
+    <td><button class="btn s" data-rm="${i}">×</button></td></tr>`;
+  }).join('')+'</tbody></table>';
+  host.querySelectorAll('[data-q]').forEach(inp=>inp.onchange=()=>{draft.lines[+inp.dataset.q].qty=parseFloat(inp.value)||1;renderOrderLines()});
+  host.querySelectorAll('[data-pr]').forEach(inp=>inp.onchange=()=>{draft.lines[+inp.dataset.pr].price=parseFloat(inp.value)||0;renderOrderLines()});
+  host.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{draft.lines.splice(+b.dataset.rm,1);renderOrderLines()});
+  const sub=draft.lines.reduce((s,l)=>s+l.qty*l.price,0);
+  const tot=Math.max(0,sub-draft.discount);
+  $('#or_tot').innerHTML=`<div class="bill" style="margin-top:8px"><div><span>Subtotal</span><span>${money0(sub)}</span></div><div><span>Discount</span><span>−${money0(draft.discount)}</span></div><div class="tot"><span>Total</span><span>${money0(tot)}</span></div></div>`;
+}
+function saveOrder(){
+  if(!draft.lines.length){$('#or_e').textContent='Add at least one product';return}
+  if(!draft.customer){$('#or_e').textContent='Select a customer';return}
+  const o=createOrder(draft.branch,draft.customer,draft.lines,draft.discount);
+  closeFrm();render();toast('Created '+o.orderNo);openOrder(o.id);
+}
+
+function openOrder(id){
+  const o=DB.orders.find(x=>x.id===id);if(!o)return;
+  const rows=o.lines.map(l=>{const p=pfind(l.productId);return `<tr><td>${esc(p.name)}</td><td class="num">${num(l.qty)}</td><td class="num">${money0(l.price)}</td><td class="num">${money0(l.qty*l.price)}</td></tr>`}).join('');
+  const actions=[];
+  if(o.status==='draft')actions.push(`<button class="btn p" data-do="confirm">Confirm & reserve</button>`);
+  if(o.status==='confirmed')actions.push(`<button class="btn p" data-do="dispatch">Create delivery note</button>`);
+  if(['delivered','partially_delivered'].includes(o.status))actions.push(`<button class="btn p" data-do="invoice">Create invoice</button>`);
+  const inv=DB.invoices.find(i=>i.orderId===o.id&&i.balance>0);
+  if(inv)actions.push(`<button class="btn p" data-do="pay" data-inv="${inv.id}">Record payment</button>`);
+  openFrm(`<div class="shh"><h2 style="font-size:16px;margin:0">${o.orderNo} ${statusPill(o.status)}</h2><button class="x" onclick="closeFrm()">×</button></div>
+  <div class="shb">
+  <div class="grid"><div><div class="sub">Customer</div>${esc(cfind(o.customerId)?.name||'')}</div><div><div class="sub">Branch</div>${bname(o.branchId)}</div>
+  <div><div class="sub">Date</div>${dshort(o.date)}</div><div><div class="sub">Total</div><b>${money0(o.total)}</b></div></div>
+  <table><thead><tr><th>Product</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Total</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="bill"><div><span>Subtotal</span><span>${money0(o.subtotal)}</span></div>${o.discount?`<div><span>Discount</span><span>−${money0(o.discount)}</span></div>`:''}<div class="tot"><span>Total</span><span>${money0(o.total)}</span></div></div>
+  </div>
+  <div class="shf"><button class="btn" onclick="closeFrm()">Close</button><div class="row">${actions.join('')}</div></div>`);
+  document.querySelectorAll('[data-do]').forEach(b=>b.onclick=()=>{
+    const a=b.dataset.do;
+    if(a==='confirm'){const r=confirmOrder(id);if(r.err){toast(r.err);return}render();toast('Order confirmed');closeFrm();openOrder(id)}
+    if(a==='dispatch'){const r=dispatchOrder(id);if(r.err){toast(r.err);return}render();toast('Dispatched as '+r.dn.dnNo);closeFrm();openOrder(id)}
+    if(a==='invoice'){const r=invoiceOrder(id);if(r.err){toast(r.err);return}render();toast('Invoice '+r.inv.invoiceNo);closeFrm();openOrder(id)}
+    if(a==='pay'){closeFrm();openPayment(b.dataset.inv)}
+  });
+}
+window.openOrder=openOrder;
+
+function openInvoice(id){
+  const i=DB.invoices.find(x=>x.id===id);if(!i)return;
+  const rows=i.lines.map(l=>{const p=pfind(l.productId);return `<tr><td>${esc(p.name)}</td><td class="num">${num(l.qty)}</td><td class="num">${money0(l.price)}</td><td class="num">${money0(l.qty*l.price)}</td></tr>`}).join('');
+  openFrm(`<div class="shh"><h2 style="font-size:16px;margin:0">${i.invoiceNo} ${statusPill(i.status)}</h2><button class="x" onclick="closeFrm()">×</button></div>
+  <div class="shb">
+  <div class="grid"><div><div class="sub">Customer</div>${esc(cfind(i.customerId)?.name||'')}</div><div><div class="sub">Date</div>${dshort(i.date)}</div>
+  <div><div class="sub">Due</div>${dshort(i.due)}</div><div><div class="sub">Order</div><span class="mono">${i.orderNo}</span></div></div>
+  <table><thead><tr><th>Product</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Total</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="bill"><div><span>Subtotal</span><span>${money0(i.subtotal)}</span></div><div><span>Paid</span><span>−${money0(i.paid)}</span></div><div class="tot"><span>Balance</span><span>${money0(i.balance)}</span></div></div>
+  </div>
+  <div class="shf"><button class="btn" onclick="closeFrm()">Close</button>${i.balance>0?`<button class="btn p" id="inv-pay">Record payment</button>`:''}</div>`);
+  const btn=document.getElementById('inv-pay');
+  if(btn) btn.onclick=()=>{closeFrm();openPayment(i.id)};
+}
+window.openInvoice=openInvoice;
+
+function openPayment(invoiceId){
+  const inv=DB.invoices.find(x=>x.id===invoiceId);if(!inv)return;
+  openFrm(`<div class="shh"><h2 style="font-size:16px;margin:0">Record payment</h2><button class="x" onclick="closeFrm()">×</button></div>
+  <div class="shb">
+  <div class="grid"><div><div class="sub">Invoice</div><b class="mono">${inv.invoiceNo}</b></div><div><div class="sub">Customer</div>${esc(cfind(inv.customerId)?.name||'')}</div>
+  <div><div class="sub">Balance</div><b>${money0(inv.balance)}</b></div><div><div class="sub">Amount</div><input id="py_a" type="number" value="${inv.balance}" step="0.01" min="0.01"></div></div>
+  <label class="f">Method<select id="py_m"><option>cash</option><option>bank_transfer</option><option>bkash</option><option>nagad</option><option>cheque</option></select></label>
+  <label class="f">Reference<input id="py_r" placeholder="TRX / cheque no."></label>
+  <div id="py_e" style="color:var(--bad);font-size:13px"></div>
+  </div>
+  <div class="shf"><button class="btn" onclick="closeFrm()">Cancel</button><button class="btn p" id="py_save">Save</button></div>`);
+  document.getElementById('py_save').onclick=()=>{
+    const amt=parseFloat($('#py_a').value);const m=$('#py_m').value;const r=$('#py_r').value;
+    if(!(amt>0)){$('#py_e').textContent='Enter a positive amount';return}
+    const res=recordPayment(invoiceId,amt,m,r);
+    if(res.err){$('#py_e').textContent=res.err;return}
+    closeFrm();render();toast('Payment recorded');
+  };
+}
+window.openPayment=openPayment;
+
+function render(){
+  renderNav();renderBranch();
+  $('#title').textContent=TITLES[state.view]||'Dashboard';
+  (views[state.view]||views.dashboard)();
+}
+window.state=state;
+
+DB=load()||seed();save();
+$('#frm').onclick=e=>{if(e.target===$('#frm'))closeFrm()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeFrm()});
+render();
+</script></body></html>
